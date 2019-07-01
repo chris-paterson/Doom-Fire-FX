@@ -1,10 +1,11 @@
 use rand::Rng;
 use sdl2::event::Event;
+use sdl2::image::LoadTexture;
 use sdl2::keyboard::Keycode;
 use sdl2::pixels::Color;
 use sdl2::pixels::PixelFormatEnum;
 use sdl2::rect::Rect;
-use sdl2::render::TextureCreator;
+use sdl2::render::{BlendMode, TextureCreator};
 
 const FIRE_WIDTH: u32 = 320;
 const FIRE_HEIGHT: u32 = 168;
@@ -66,9 +67,19 @@ fn main() {
     canvas.set_draw_color(Color::RGBA(0x07, 0x07, 0x07, 255));
     canvas.present();
 
+    // Spooky
+    let mut y_scrolling = 600;
+    let image_texture_creator = canvas.texture_creator();
+
+    // Ferris Logo:
+    let logo = image_texture_creator
+        .load_texture("./res/skellebones.png")
+        .unwrap();
+
+    let mut fire_direction = 1;
+
     // This gives us access to keyboard events.
     let mut event_pump = sdl_context.event_pump().unwrap();
-    let mut fire_direction = 1;
 
     'running: loop {
         canvas.clear();
@@ -123,8 +134,16 @@ fn main() {
             })
             .unwrap();
 
-        // Display
+        &fire_texture.set_blend_mode(BlendMode::Blend);
+
+        if y_scrolling != 70 {
+            y_scrolling -= 2;
+        }
+
         let rect = Rect::new(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        let spooky_rect = Rect::new(40, y_scrolling, CANVAS_WIDTH - 75, 450);
+
+        canvas.copy(&logo, None, Some(spooky_rect)).unwrap();
         canvas.copy(&fire_texture, None, Some(rect)).unwrap();
         canvas.present();
     }
