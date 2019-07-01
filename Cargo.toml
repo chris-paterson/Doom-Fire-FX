@@ -5,3 +5,9 @@ authors = ["Chris Paterson <cjpaterson.3@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.7.0"
+
+[dependencies.sdl2]
+version = "0.32.1"
+default-features = false
+features = ["image"]
