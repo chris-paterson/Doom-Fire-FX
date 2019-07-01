@@ -11,8 +11,6 @@ const FIRE_HEIGHT: u32 = 168;
 const CANVAS_WIDTH: u32 = 800;
 const CANVAS_HEIGHT: u32 = 600;
 
-static FIRE_DIRECTION: u32 = 1;
-
 fn main() {
     // Every 3 values represent R, G, B.
     // The values 0->32 are used to select which grouping of 3 we want to use.
@@ -70,6 +68,7 @@ fn main() {
 
     // This gives us access to keyboard events.
     let mut event_pump = sdl_context.event_pump().unwrap();
+    let mut fire_direction = 1;
 
     'running: loop {
         canvas.clear();
@@ -81,6 +80,15 @@ fn main() {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+                Event::KeyDown {
+                    keycode: Some(keycode),
+                    ..
+                } => match keycode {
+                    Keycode::Left => fire_direction -= 1,
+                    Keycode::Right => fire_direction += 1,
+                    Keycode::R => fire_direction = 1,
+                    _ => {}
+                },
                 _ => {}
             }
         }
@@ -88,7 +96,7 @@ fn main() {
         // Write state of pixel buffer into fire texture.
         fire_texture
             .with_lock(None, |buffer: &mut [u8], _pitch: usize| {
-                calculate_fire(&mut pixel_buffer);
+                calculate_fire(&mut pixel_buffer, fire_direction);
 
                 for (idx, pixel_cursor) in pixel_buffer.iter().enumerate() {
                     let start = (*pixel_cursor * 3) as usize;
@@ -122,16 +130,16 @@ fn main() {
     }
 }
 
-pub fn calculate_fire(pixel_buffer: &mut [u8]) {
+pub fn calculate_fire(pixel_buffer: &mut [u8], fire_direction: u32) {
     for x in 0..FIRE_WIDTH {
         for y in 1..FIRE_HEIGHT {
             let pixel_cursor = y * FIRE_WIDTH + x;
-            spread_fire(pixel_cursor, pixel_buffer);
+            spread_fire(pixel_cursor, pixel_buffer, fire_direction);
         }
     }
 }
 
-pub fn spread_fire(pixel_cursor: u32, pixel_buffer: &mut [u8]) {
+pub fn spread_fire(pixel_cursor: u32, pixel_buffer: &mut [u8], fire_direction: u32) {
     let pixel = pixel_buffer[pixel_cursor as usize];
 
     if pixel == 0 {
@@ -144,7 +152,7 @@ pub fn spread_fire(pixel_cursor: u32, pixel_buffer: &mut [u8]) {
         let random_index = (rng.gen::<f64>() * 3.0).round() as u8 & 3;
 
         // Distance affects how the fire behaves. E.g. blowing left, right.
-        let distance = pixel_cursor - (random_index as u32) + FIRE_DIRECTION;
+        let distance = pixel_cursor - (random_index as u32) + fire_direction;
         let new_index = (distance - FIRE_WIDTH) as usize;
         //
         // Select a similar colour for the near pixel.
